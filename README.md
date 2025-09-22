@@ -2,6 +2,10 @@
 
 ![Author](https://img.shields.io/badge/author-samip--regmi-blue)
 
+## Credits
+
+Heavily inspired by the algorithm used in **2FA** made by Samip Regmi, Raju Bhetwal, and Nayan Nembang
+
 ---
 
 ## IMAGE TO SOUND
