@@ -1,4 +1,4 @@
-from converter.image_sound_mapper import ImageToSound , SoundToImage
+from backend.converter.image_sound_mapper import ImageToSound , SoundToImage
 
 IMAGE_PATH = "src_image/image.png"
 GRAYSCALE_PATH = "images/grayscale_image.png"

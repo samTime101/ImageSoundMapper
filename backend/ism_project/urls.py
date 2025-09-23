@@ -1,5 +1,5 @@
 """
-URL configuration for backend project.
+URL configuration for ism_project project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
@@ -16,7 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from soundtoimage.views import SoundToImageView
+from imagetosound.views import ImageToSoundView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('encrypt/', ImageToSoundView.as_view(), name='image_to_sound'),
+    path('decrypt/', SoundToImageView.as_view(), name='sound_to_image'),
 ]

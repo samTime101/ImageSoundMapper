@@ -184,8 +184,8 @@ class SoundToImage:
             img = Image.fromarray(img_array, mode='L')
             img.save(self.save_path)
             print(f"IMAGE SAVED: {self.save_path}") 
-            plt.imshow(img_array, cmap='gray', vmin=0, vmax=255)
-            plt.show()
+            # plt.imshow(img_array, cmap='gray', vmin=0, vmax=255)
+            # plt.show()
         except Exception as e:
             print(f"ERROR SAVING IMAGE: {e}")
 
