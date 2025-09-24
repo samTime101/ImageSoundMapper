@@ -43,16 +43,12 @@ class ImageToSoundStreamLogs(View):
 
         upload_dir = os.path.join(unique_id,"uploads")
         if not os.path.exists(upload_dir):
-            return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Upload directory not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        image_path = None
-        for filename in os.listdir(upload_dir):
-            if filename.endswith(".png"):
-                image_path = os.path.join(upload_dir, filename)
-                break
+        image_path = os.path.join(upload_dir, "image.png")
 
-        if not image_path:
-            return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+        if not os.path.exists(image_path):
+            return Response({"error": "Image file not found"}, status=status.HTTP_404_NOT_FOUND)
 
         results_dir = os.path.join(unique_id, "results")
         os.makedirs(results_dir, exist_ok=True)
@@ -83,13 +79,10 @@ class ImageToSoundStreamLogs(View):
 
             yield 'data: 7. CONVERTING PIXELS TO FREQUENCIES \n\n'
             freqs = its.pixel_to_frequency(pixels)
-            yield 'data: 8. CONVERSION COMPLETE \n\n'
-
             yield 'data: 9. CONVERTING FREQUENCIES TO SOUND \n\n'
             its.frequency_to_sound(freqs)
-            yield 'data: 10. CONVERSION COMPLETE \n\n'
+            yield "data: CONVERSION COMPLETED\n\n"
 
-            yield f'data: sound_path:{sound_path} \n\n'
 
         return StreamingHttpResponse(log_generator(), content_type='text/event-stream')
 

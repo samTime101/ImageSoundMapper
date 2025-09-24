@@ -2,60 +2,62 @@
 
 import { useState } from "react";
 import axios from "axios";
-export default function App() {
-  const [result, setResult] = useState([]);
-  const [file, setFile] = useState(null);
-  const [audioPreview, setaudioPreview] = useState(null);
 
-  const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
-  };
+export default function Converter() {
+  const [mode, setMode] = useState("its");
+  const [file, setFile] = useState(null);
+  const [result, setResult] = useState([]);
+  const [preview, setPreview] = useState(null);
+
+  const handleFileChange = (e) => setFile(e.target.files[0]);
 
   async function fetchPreview(id) {
     try {
-      const previewResponse = await axios.get(`http://localhost:8000/its/preview/?id=${id}`, {
+      console.log("FETCHING PREVIEW FOR ID:", id);
+      console.log(`http://localhost:8000/${mode}/preview/?id=${id}`);
+      const previewResponse = await axios.get(`http://localhost:8000/${mode}/preview/?id=${id}`, {
         responseType: 'blob',
       });
       const url = URL.createObjectURL(previewResponse.data);
-      // alert(url)
-      setaudioPreview(url);
-    } catch (error) {
-      console.error("Error fetching preview:", error);
+      setPreview(url);
+    } catch (err) {
+      console.error("PREVIEW ERROR", err);
     }
   }
 
-  const ConvertImageToSound = async () => {
-    // CLEAR THE PREVIOUS RESULT
+  const handleConversion = async () => {
     setResult([]);
+    setPreview(null);
 
-    if (!file) {
-      alert("SELECT IMAGE PLEASE");
-      return;
-    }
+    if (!file) return alert(`SELECT ${mode === "its" ? "IMAGE" : "SOUND"} PLEASE`);
 
     const formData = new FormData();
-    formData.append("image", file);
-    let image_id = null
+    formData.append(mode === "its" ? "image" : "audio", file);
+    console.log("FORM DATA", formData);
+
     try {
-      const response = await axios.post("http://localhost:8000/its/", formData);
+      const response = await axios.post(`http://localhost:8000/${mode}/`, formData);
+      if (response.status !== 201) throw new Error("UPLOAD FAILED");
 
-      if (response.status !== 201) throw new Error("FAILED UPLOAD");
-
-      const data = response.data;
-      image_id = data.id;
+      const { id } = response.data;
 
       if (typeof EventSource !== "undefined") {
-        const source = new EventSource(`http://localhost:8000/its/stream/?id=${image_id}`);
+        const source = new EventSource(`http://localhost:8000/${mode}/stream/?id=${id}`);
 
         source.onmessage = (event) => {
           setResult((prev) => [...prev, event.data]);
+
+          if (event.data === "CONVERSION COMPLETED") {
+            // alert("CONVERSION DONE");
+            source.close();
+            fetchPreview(id);
+          }
         };
 
         source.onerror = () => {
           source.close();
           console.error("SSE CLOSED");
         };
-        fetchPreview(image_id);
       } else {
         alert("UNSUPPORTED BROWSER FOR SSE");
       }
@@ -66,18 +68,31 @@ export default function App() {
 
   return (
     <div className="App">
-      <h1>Convert Image to Sound</h1>
-      <input type="file" onChange={handleFileChange} />
-      <button onClick={ConvertImageToSound}>Start Conversion</button>
+      <h1>{mode === "its" ? "Image to Sound" : "Sound to Image"} Converter</h1>
       <div>
-        {result.map((line, index) => (
-          <div key={index}>{line}</div>
-        ))}
+        <label>
+          <input type="radio" value="its" checked={mode === "its"} onChange={() => setMode("its")} /> Image to Sound
+        </label>
+        <label style={{ marginLeft: 20 }}>
+          <input type="radio" value="sti" checked={mode === "sti"} onChange={() => setMode("sti")} /> Sound to Image
+        </label>
       </div>
-      {audioPreview && (
+      <input type="file" accept={mode === "its" ? "image/*" : "audio/wav/"} onChange={handleFileChange} />
+      <button onClick={handleConversion}>Start Conversion</button>
+
+      <div>
+        {/* <h2>Logs:</h2> */}
+        {result.map((line, i) => <div key={i}>{line}</div>)}
+      </div>
+
+      {preview && (
         <div>
           <h2>Preview:</h2>
-          <audio controls src={audioPreview}></audio>
+          {mode === "its" ? (
+            <audio controls src={preview}></audio>
+          ) : (
+            <img src={preview} alt="Preview" style={{ maxWidth: 300 }} />
+          )}
         </div>
       )}
     </div>
