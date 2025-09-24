@@ -68,10 +68,10 @@ export default function Converter() {
     }
   };
 
+  // todo: make this shit look good
   return (
     <div className="App">
       <i>samTime101 2025 sep 24</i>
-      <p>{API_BASE_URL}</p>
       <h1>{mode === "its" ? "Image to Sound" : "Sound to Image"} Converter</h1>
       <div>
         <label>

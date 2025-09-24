@@ -1,0 +1,14 @@
+/imgs
+__pycache__
+images/
+sounds/
+outputs/
+reconstructed_image/
+migrations/
+results/
+uploads/
+
+*.env
+**/*.env
+.env
+.env.*
