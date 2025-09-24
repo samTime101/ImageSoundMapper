@@ -126,25 +126,26 @@ export default function Converter() {
               className="flex gap-6"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="its" id="its" />
+                <RadioGroupItem value="its" id="its" disabled={processing} />
                 <Label htmlFor="its">Image to Sound</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="sti" id="sti" />
+                <RadioGroupItem value="sti" id="sti" disabled={processing} />
                 <Label htmlFor="sti">Sound to Image</Label>
               </div>
             </RadioGroup>
           </div>
 
-          <div>
+          <div> 
             <Label htmlFor="file">Upload {mode === "its" ? "Image" : "Audio"}</Label>
             <Input
-              key={mode}
-              id="file"
-              type="file"
-              accept={mode === "its" ? "image/*" : "audio/*"}
-              onChange={handleFileChange}
-              className="mt-2"
+                key={mode}
+                id="file"
+                type="file"
+                accept={mode === "its" ? "image/*" : "audio/*"}
+                onChange={handleFileChange}
+                className="mt-2"
+                disabled={processing}
             />
           </div>
           <Button onClick={handleConversion} className={`w-full ${processing ? 'bg-gray-400 cursor-not-allowed' : ''}`} disabled={processing}>
