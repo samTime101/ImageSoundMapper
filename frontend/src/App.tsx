@@ -14,6 +14,7 @@ export default function Converter() {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<string[]>([]);
   const [preview, setPreview] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) {
@@ -38,6 +39,7 @@ export default function Converter() {
   }
 
   const handleConversion = async () => {
+    setProcessing(true);
     setResult([]);
     setPreview(null);
     if (!file)
@@ -58,17 +60,21 @@ export default function Converter() {
           setResult((prev: string[]) => [...prev , event.data as string]);
           if (event.data === "CONVERSION COMPLETED") {
             source.close();
+            setProcessing(false);
             fetchPreview(id);
           }
         };
         source.onerror = () => {
           source.close();
+          setProcessing(false);
           console.error("SSE CLOSED");
         };
       } else {
+        setProcessing(false);
         alert("UNSUPPORTED BROWSER FOR SSE");
       }
     } catch (err) {
+      setProcessing(false);
       console.error(err);
     }
   };
@@ -122,12 +128,11 @@ export default function Converter() {
               className="mt-2"
             />
           </div>
-
-          <Button onClick={handleConversion} className="w-full">
-            Start Conversion
+          <Button onClick={handleConversion} className={`w-full ${processing ? 'bg-gray-400 cursor-not-allowed' : ''}`} disabled={processing}>
+            {processing ? 'Processing...' : 'Start Conversion'}
           </Button>
 
-          {result.length > 0 && (
+          {/* {result.length > 0 && ( */}
             <ScrollArea className="h-40 w-full rounded-md border p-2">
               {result.map((line, i) => (
                 <div
@@ -138,7 +143,7 @@ export default function Converter() {
                 </div>
               ))}
             </ScrollArea>
-          )}
+          {/* )} */}
 
           {preview && (
             <div>
