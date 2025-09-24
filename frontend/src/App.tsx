@@ -11,13 +11,20 @@ const API_BASE_URL = import.meta.env.VITE_HOST;
 
 export default function Converter() {
   const [mode, setMode] = useState("its");
-  const [file, setFile] = useState(null);
-  const [result, setResult] = useState([]);
-  const [preview, setPreview] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [result, setResult] = useState<string[]>([]);
+  const [preview, setPreview] = useState<string | null>(null);
 
-  const handleFileChange = (e) => setFile(e.target.files[0]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) {
+      setFile(null);
+      return;
+    }
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+  };
 
-  async function fetchPreview(id) {
+  async function fetchPreview(id: string) {
     try {
       const previewResponse = await axios.get(
         `${API_BASE_URL}/${mode}/preview/?id=${id}`,
@@ -48,7 +55,7 @@ export default function Converter() {
       if (typeof EventSource !== "undefined") {
         const source = new EventSource(`${API_BASE_URL}/${mode}/stream/?id=${id}`);
         source.onmessage = (event) => {
-          setResult((prev) => [...prev, event.data]);
+          setResult((prev: string[]) => [...prev , event.data as string]);
           if (event.data === "CONVERSION COMPLETED") {
             source.close();
             fetchPreview(id);
@@ -66,7 +73,7 @@ export default function Converter() {
     }
   };
 
-  const handleModeChange = (newMode) => {
+  const handleModeChange = (newMode: "its" | "sti") => {
     setMode(newMode);
     setPreview(null);
     setResult([]);
