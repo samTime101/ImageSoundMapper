@@ -92,7 +92,7 @@ export default function Converter() {
 
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto">
-      <Card className="shadow-lg">
+    <Card className="shadow-lg bg-neutral-950 text-white">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">
             {mode === "its" ? "Image to Sound" : "Sound to Image"} Converter
