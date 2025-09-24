@@ -156,7 +156,7 @@ export default function Converter() {
               {result.map((line, i) => (
                 <div
                   key={i}
-                  className="text-sm font-mono bg-muted p-1 mb-1 rounded"
+                  className="text-sm font-mono bg-muted p-1 mb-1 rounded bg-neutral-900"
                 >
                   {line}
                 </div>
