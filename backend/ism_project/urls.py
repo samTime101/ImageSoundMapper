@@ -16,12 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from soundtoimage.views import SoundToImageView
-from imagetosound.views import ImageToSoundView
-
-
+from imagetosound.views import ImageToSoundStreamLogs , ImageToSoundView , ImageToSoundPreview
+# from soundtoimage.views import SoundToImageStreamLogs , SoundToImageView
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('encrypt/', ImageToSoundView.as_view(), name='image_to_sound'),
-    path('decrypt/', SoundToImageView.as_view(), name='sound_to_image'),
+    path('its/stream/', ImageToSoundStreamLogs.as_view(), name='image_to_sound_stream'),
+    # path('sti/stream/', SoundToImageStreamLogs.as_view(), name='sound_to_image_stream'),
+    path('its/', ImageToSoundView.as_view(), name='image_to_sound'),
+    # path('sti/', SoundToImageView.as_view(), name='sound_to_image'),
+    path('its/preview/', ImageToSoundPreview.as_view(), name='image_to_sound_preview'),
 ]

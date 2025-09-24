@@ -1,22 +1,17 @@
-# SEPTEMBER 23 2025
-# SAMIP REGMI
-
-from rest_framework import serializers
+import os
+import uuid
+from django.http import StreamingHttpResponse , FileResponse
 from rest_framework.views import APIView
-from rest_framework.response import Response
+from rest_framework import serializers
 from rest_framework.parsers import MultiPartParser, FormParser
+from converter.image_sound_mapper import ImageToSound 
+from django.views import View
+from rest_framework.response import Response
 from rest_framework import status
-from django.http import FileResponse
-from converter.image_sound_mapper import ImageToSound
-import os ,uuid
 
 class FileUploadSerializer(serializers.Serializer):
-    file = serializers.FileField()
+    image = serializers.FileField()
 
-UPLOAD_DIR = "uploads"
-RESULT_DIR = "results"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(RESULT_DIR, exist_ok=True)
 
 class ImageToSoundView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -24,24 +19,93 @@ class ImageToSoundView(APIView):
     def post(self, request):
         serializer = FileUploadSerializer(data=request.data)
         if serializer.is_valid():
-            image_file = serializer.validated_data['file']
+            image_file = serializer.validated_data['image']
             unique_id = str(uuid.uuid4())
-            image_path = os.path.join(UPLOAD_DIR, f"{unique_id}_{image_file.name}")
-            grayscale_path = os.path.join(RESULT_DIR, f"{unique_id}_grayscale.png")
-            resized_path = os.path.join(RESULT_DIR, f"{unique_id}_resized.png")
-            sound_path = os.path.join(RESULT_DIR, f"{unique_id}_output.wav")
+            
+            upload_dir = os.path.join(unique_id,"uploads")
+            os.makedirs(upload_dir, exist_ok=True)
 
+            image_path = os.path.join(upload_dir, f"image.png")
             with open(image_path, 'wb+') as destination:
                 for chunk in image_file.chunks():
                     destination.write(chunk)
 
-            its = ImageToSound(image_path, grayscale_path, resized_path, sound_path)
-            its.compress_image_with_new_dimension((50, 50))
-            its.image_to_grayscale()
-            pixels = its.pixel_value_extractor()
-            freqs = its.pixel_to_frequency(pixels)
-            its.frequency_to_sound(freqs)
-
-
-            return FileResponse(open(sound_path, "rb") , content_type='audio/wav')
+            return Response({"id": unique_id}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class ImageToSoundStreamLogs(View):
+    def get(self, request):
+        unique_id = request.GET.get("id")
+        if not unique_id:
+            return Response({"error": "ID not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        upload_dir = os.path.join(unique_id,"uploads")
+        if not os.path.exists(upload_dir):
+            return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        image_path = None
+        for filename in os.listdir(upload_dir):
+            if filename.endswith(".png"):
+                image_path = os.path.join(upload_dir, filename)
+                break
+
+        if not image_path:
+            return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        results_dir = os.path.join(unique_id, "results")
+        os.makedirs(results_dir, exist_ok=True)
+
+        grayscale_path = os.path.join(results_dir, f"grayscale.png")
+        resized_path = os.path.join(results_dir, f"resized.png")
+        sound_path = os.path.join(results_dir, f"sound.wav")
+
+        its = ImageToSound(
+            image_path,
+            grayscale_path,
+            resized_path,
+            sound_path
+        )
+
+        def log_generator():
+            yield 'data: 1. RESIZING IMAGE \n\n'
+            its.compress_image_with_new_dimension((50, 50))
+            yield 'data: 2. IMAGE RESIZED \n\n'
+
+            yield 'data: 3. CONVERTING TO GRAY SCALE \n\n'
+            its.image_to_grayscale()
+            yield 'data: 4. GRAYSCALE CONVERSION COMPLETE \n\n'
+
+            yield 'data: 5. EXTRACTION OF PIXEL VALUES \n\n'
+            pixels = its.pixel_value_extractor()
+            yield 'data: 6. EXTRACTION COMPLETE \n\n'
+
+            yield 'data: 7. CONVERTING PIXELS TO FREQUENCIES \n\n'
+            freqs = its.pixel_to_frequency(pixels)
+            yield 'data: 8. CONVERSION COMPLETE \n\n'
+
+            yield 'data: 9. CONVERTING FREQUENCIES TO SOUND \n\n'
+            its.frequency_to_sound(freqs)
+            yield 'data: 10. CONVERSION COMPLETE \n\n'
+
+            yield f'data: sound_path:{sound_path} \n\n'
+
+        return StreamingHttpResponse(log_generator(), content_type='text/event-stream')
+
+
+
+class ImageToSoundPreview(APIView):
+    def get(self, request):
+        unique_id = request.GET.get("id")
+        if not unique_id:
+            return Response({"error": "ID not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        results_dir = os.path.join(unique_id, "results")
+        sound_path = os.path.join(results_dir, "sound.wav")
+        print(f"Sound path->{sound_path}")
+
+        if not os.path.exists(sound_path):
+            return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        return FileResponse(open(sound_path, 'rb'), content_type='audio/wav')
