@@ -77,9 +77,8 @@ export default function Converter() {
           <input type="radio" value="sti" checked={mode === "sti"} onChange={() => setMode("sti")} /> Sound to Image
         </label>
       </div>
-      <input type="file" accept={mode === "its" ? "image/*" : "audio/wav/"} onChange={handleFileChange} />
+      <input key={mode} type="file" accept={mode === "its" ? "image/*" : "audio/wav"} onChange={handleFileChange} />
       <button onClick={handleConversion}>Start Conversion</button>
-
       <div>
         {/* <h2>Logs:</h2> */}
         {result.map((line, i) => <div key={i}>{line}</div>)}
