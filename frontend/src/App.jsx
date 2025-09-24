@@ -3,6 +3,8 @@
 import { useState } from "react";
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_HOST;
+
 export default function Converter() {
   const [mode, setMode] = useState("its");
   const [file, setFile] = useState(null);
@@ -14,8 +16,8 @@ export default function Converter() {
   async function fetchPreview(id) {
     try {
       console.log("FETCHING PREVIEW FOR ID:", id);
-      console.log(`http://localhost:8000/${mode}/preview/?id=${id}`);
-      const previewResponse = await axios.get(`http://localhost:8000/${mode}/preview/?id=${id}`, {
+      console.log(`${API_BASE_URL}/${mode}/preview/?id=${id}`);
+      const previewResponse = await axios.get(`${API_BASE_URL}/${mode}/preview/?id=${id}`, {
         responseType: 'blob',
       });
       const url = URL.createObjectURL(previewResponse.data);
@@ -36,13 +38,13 @@ export default function Converter() {
     console.log("FORM DATA", formData);
 
     try {
-      const response = await axios.post(`http://localhost:8000/${mode}/`, formData);
+      const response = await axios.post(`${API_BASE_URL}/${mode}/`, formData);
       if (response.status !== 201) throw new Error("UPLOAD FAILED");
 
       const { id } = response.data;
 
       if (typeof EventSource !== "undefined") {
-        const source = new EventSource(`http://localhost:8000/${mode}/stream/?id=${id}`);
+        const source = new EventSource(`${API_BASE_URL}/${mode}/stream/?id=${id}`);
 
         source.onmessage = (event) => {
           setResult((prev) => [...prev, event.data]);
@@ -68,6 +70,8 @@ export default function Converter() {
 
   return (
     <div className="App">
+      <i>samTime101 2025 sep 24</i>
+      <p>{API_BASE_URL}</p>
       <h1>{mode === "its" ? "Image to Sound" : "Sound to Image"} Converter</h1>
       <div>
         <label>
