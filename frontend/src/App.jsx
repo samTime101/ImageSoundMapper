@@ -1,88 +1,42 @@
-// todo: reduct the redundancy 
-
 import { useState } from "react";
 import axios from "axios";
 
-function ImageToSound() {
+function FileConverter({ url, accept, renderResult }) {
   const [file, setFile] = useState(null);
   const [result, setResult] = useState(null);
 
   const handleFileUpload = (event) => {
-    const uploadedFile = event.target.files[0];
-    setFile(uploadedFile);
-  }
+    setFile(event.target.files[0]);
+  };
 
-  const handleImageSubmit = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!file) return;
+
     const formData = new FormData();
     formData.append("file", file);
+
     try {
-      const response = await axios.post("http://localhost:8000/encrypt/", 
-        formData, 
-        {
-        headers: {"Content-Type": "multipart/form-data"},
+      const response = await axios.post(url, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
         responseType: "blob",
-      }
-    );
-      const url = URL.createObjectURL(response.data);
-      setResult(url);
-    } catch (error) {
-      console.error("ERROR :", error);
-    }
-  }
-
-  return (
-    <>
-      <form onSubmit={handleImageSubmit}>
-        <input type="file" accept="image/*" onChange={handleFileUpload} />
-        <button type="submit">Upload</button>
-        <p>{result}</p>
-        <p>test</p>
-      </form>
-      {result && <audio controls src={result} />}
-    </>
-  )
-}
-
-function SoundToImage() {
-  const [file, setFile] = useState(null);
-  const [result, setResult] = useState(null);
-
-  const handleFileUpload = (event) => {
-    const uploadedFile = event.target.files[0];
-    setFile(uploadedFile);
-  }
-  
-  const handleWavSubmit = async (event) => {
-    event.preventDefault();
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      const response = await axios.post("http://localhost:8000/decrypt/", 
-        formData, 
-        {
-        headers: {"Content-Type": "multipart/form-data"},
-        responseType: "blob",
-      }
-    );
-      const url = URL.createObjectURL(response.data);
-      setResult(url);
+      });
+      const blobUrl = URL.createObjectURL(response.data);
+      setResult(blobUrl);
     } catch (error) {
       console.error("ERROR:", error);
     }
-  }
+  };
 
   return (
     <>
-      <form onSubmit={handleWavSubmit}>
-        <input type="file" accept="audio/wav/" onChange={handleFileUpload} />
+      <form onSubmit={handleSubmit}>
+        <input type="file" accept={accept} onChange={handleFileUpload} />
         <button type="submit">Upload</button>
-        <p>{result}</p>
-        <p>test</p>
       </form>
-      {result && <img alt="result" src={result} />}
+      {result && renderResult(result)}
     </>
-  )
+  );
 }
 
 export default function App() {
@@ -92,9 +46,22 @@ export default function App() {
     <>
       <button onClick={() => setMode("image-to-sound")}>Image to Sound</button>
       <button onClick={() => setMode("sound-to-image")}>Sound to Image</button>
-      {mode === "image-to-sound" ? <ImageToSound /> : <SoundToImage />}
+
+      {mode === "image-to-sound" ? (
+        <FileConverter
+          url="http://localhost:8000/encrypt/"
+          accept="image/*"
+          renderResult={(url) => <audio controls src={url} />}
+        />
+      ) : (
+        <FileConverter
+          url="http://localhost:8000/decrypt/"
+          accept="audio/wav"
+          renderResult={(url) => <img alt="result" src={url} />}
+        />
+      )}
 
       <p>you are in {mode} mode</p>
     </>
-  )
+  );
 }
