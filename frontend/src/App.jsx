@@ -68,17 +68,17 @@ export default function Converter() {
     }
   };
 
-  // todo: make this shit look good
   return (
     <div className="App">
       <i>samTime101 2025 sep 24</i>
       <h1>{mode === "its" ? "Image to Sound" : "Sound to Image"} Converter</h1>
       <div>
         <label>
-          <input type="radio" value="its" checked={mode === "its"} onChange={() => setMode("its")} /> Image to Sound
+          {/* RESET GARNE IF MODE CHANGES */}
+          <input type="radio" value="its" checked={mode === "its"} onChange={() => {setMode("its"); setPreview(null); setResult([]);}} /> Image to Sound
         </label>
         <label style={{ marginLeft: 20 }}>
-          <input type="radio" value="sti" checked={mode === "sti"} onChange={() => setMode("sti")} /> Sound to Image
+          <input type="radio" value="sti" checked={mode === "sti"} onChange={() => {setMode("sti"); setPreview(null); setResult([]);}} /> Sound to Image
         </label>
       </div>
       <input key={mode} type="file" accept={mode === "its" ? "image/*" : "audio/wav"} onChange={handleFileChange} />
